@@ -34,30 +34,36 @@ package
 			var padding:Number = 20
 			
 			
-			/*var mapData:Array = [
+			 var mapData:Array = [
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+			0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
 			0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
 			0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
 			0, 0, 1, 0, 0, 0, 0, 1, 0, 0,
 			0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
 			0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 1, 0, 0
+			] 
+			
+			/*var mapData:Array = [
+			0, 1, 0, 0, 0, 0,
+			1, 1, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0,
+			0, 0, 1, 1, 1, 1,
+			0, 0, 1, 0, 0, 0
 			]*/
 			
-			var mapData:Array = [
-			0, 1, 0,
-			 1, 1, 0,
-			0, 0, 0
-			
-			]
-			
+			mapData=[0,1,1,1,1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,1,0,0,1,0,0,1,1,0,1,0,0,0,1,0,1,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,1,0,1,1,1,1,0,1,0,0,0]
 			
 			map = new Map();
-			//map.init(100, 100);
-			map.convertData(mapData,3,3);
+			map.mpWidth=750
+			map.mpHeight=750
+			map.init(50, 50);
+			//map.convertData(mapData,6,6);
+		//	map.convertData(mapData,10,10);
 			map.x = 20;
 			map.y = 20;
 			map.doubleClickEnabled = true;
@@ -137,7 +143,7 @@ package
 		private function onMapUpdate(e:MouseEvent):void 
 		{
 			//if(e.currentTarget!=map)
-			map.updateMap();
+			map.updateMap(true);
 			map.addPlayer(player);
 			map.addPlayer(targetPoint);
 		}

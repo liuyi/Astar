@@ -23,8 +23,8 @@ package
 		public var blockColor:Number = 0x333333;
 		
 		
-		public var mpWidth:Number=600;
-		public var mpHeight:Number=600;
+		public var mpWidth:Number=500;
+		public var mpHeight:Number=500;
 		
 		private var terrain:Sprite;
 		private var _cellHeight:Number;
@@ -43,7 +43,9 @@ package
 		public var _terrainData:Array;
 		
 		private var islands:int
-		private var islandColors:Array=[0x00ff00,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee]
+		private var islandsList:Array;//store all types island to it. such as: islandsList[0]=[1,2,3,4,5]
+		private var islandColors:Array=[0x00ccba,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee,0x336699,0xf8eaef,0x00ccba,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee,0x336699,0xf8eaef,0x00ccba,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee,0x336699,0xf8eaef]
+		
 		
 		
 		
@@ -63,12 +65,13 @@ package
 		
 		
 		
-		public function updateMap():void {
+		public function updateMap(freshData:Boolean=false):void {
 			data = new Vector.<MapNode>();
-			if (_terrainData != null) {
+			if (_terrainData != null && !freshData) {
 				_dataLen = _terrainData.length;
 				row = int(_dataLen/col);
-			}else{
+			}else {
+				_terrainData = [];
 				_dataLen = col * row;
 			
 			}
@@ -81,20 +84,25 @@ package
 				data[i].y = int(i / row) ;
 				data[i].id = i;
 				
-				if (_terrainData != null) {
+				if (_terrainData != null && !freshData) {
 					data[i].block =( _terrainData[i]>0) ?true:false;
 				}else{
 				
-				if (Math.random() < blockPercent) 
-					data[i].block = true;
-			     else 
-					data[i].block = false
-					
+					if (Math.random() < blockPercent) {
+						data[i].block = true;
+					_terrainData[i] = 1
+					}
+					 else {
+						data[i].block = false
+						_terrainData[i] = 0
+					 }
 				}
 				data[i].neighbors = getNeighbors(i);
 				
 			}
-			//trace("map:"+data);
+			
+			
+			// trace("map list:"+_terrainData+"\n");
 			
 			getIslands();
 			
@@ -148,14 +156,16 @@ package
 				
 						terrain.graphics.beginFill(blockColor);
 						 
+						terrain.graphics.drawRect(c * _cellWidth, r * _cellHeight, _cellWidth, _cellHeight);
 						
-						
-					}else  if (data[i].island >= 0) {
+					}
+					if (data[i].island >= 0) {
 					
 						terrain.graphics.beginFill(islandColors[data[i].island ]);
+						terrain.graphics.drawRect(c * _cellWidth, r * _cellHeight, _cellWidth, _cellHeight);
 					}
 					
-					terrain.graphics.drawRect(c * _cellWidth, r * _cellHeight, _cellWidth, _cellHeight);
+					
 				  
 				}
 				
@@ -176,116 +186,191 @@ package
 		public function init( $col:uint,$row:uint):void {
 			col = $col; 
 			row = $row;
-			updateMap();
+			updateMap(true);
 			
 			
 		}
 		
 		
+		 
+		
+		
 		public function getIslands():void {
-			var len:int = data.length;
 			islands = 0;
-			var cid:int;
-			var cpoint:MapNode;
-			var nList:Array;
-			var k:int
-			var nLen:int
-			var nPoint:MapNode;
-			var unSignList:Array = [];//store id
-			var signList:Array = [];//store id
-			var nIslandId:int=-1;//this current point's neighbor's island id.
-			var access:Boolean
-			var accessList:Array;//store all the can access neibour to this list. 
+			var unSignList:Array = [];
+			islandsList = [];
+			var len:int = data.length;
 			for (var i:int = 0; i < len;i++ ) {
 				unSignList[i] = i;
-				trace("befor init:"+data[i].island)
+				//trace("befor init:"+data[i].island)
 			}
-			var step:int = 2000;
+			
+			var cid:int;
+			var cpoint:MapNode
+			
+			var step:int = 3000;
 			while (step>0 && unSignList.length > 0) {
 				step--
 				cid = unSignList[0];
 				cpoint = data[cid];
 				
 				//remove block from list
-				if (cpoint.block ) { 
-					
-					unSignList.shift();
+				if (cpoint.block || cpoint.island >= 0) { 
+					unSignList.shift()
 					continue; 
-				}  
-				
-				if (cpoint.island >= 0) {
-					if (signList.indexOf(cid) < 0) {
-						signList.unshift(unSignList.shift());
-					}
-					trace("cpoint id==>:"+cid)
-					continue;
-				}
-				accessList = [];
-				//have not check
-				 //trace("step111:>>?" + step,cpoint.id,cpoint.island);
-				 
-				// trace("cid:>>" + cid+"  islands:"+islands);
-				
-				//check its neighbors, if all of them both not have island, then there is a new island.
-				
-				var hasNeibours:Boolean=true
-				while(!hasNeibours){
-					nList = cpoint.neighbors;
-					nLen = nList.length;
-					for (k = 0; k < nLen; k++ ) {
-						nPoint = data[nList[k]];
-						access = true;
-						if (nPoint.block) {
-							access=false
-						}else if (cpoint.neighborG[k] > 10) {
-								
-								//if the neighbor point is diagonal,check can access to it.
-								if (nPoint.id > cid) {
-									if (data[nPoint.id - col].block && data[cid + col].block) 
-										access=false
-								
-								}else {
-									if (data[nPoint.id + col].block && data[cid - col].block) 
-										access=false
-								}
-					 
-						}
-						
-						if (access) {
-							nIslandId = nPoint.island;
-							trace("nIslandId:"+nIslandId)
-							accessList.push(nPoint);
-						}
-					}//end for
-				
 				}
 				
-				//if all of its neigbours don't have sign in a island, then continue to find their neibours.
-				if (nIslandId < 0) {
-					islands++
-					trace("get new island:"+islands,"id:"+cid+"accessList:"+accessList.length)
-					cpoint.island = islands;
-					
-					for (k = 0; k < accessList.length;k++ ) {
-						nPoint = accessList[k];
-						nPoint.island = cpoint.island;
-					}
-					
-				}else {
-					cpoint.island = nIslandId;
-					trace("===>cid:"+cid,"nIslandId:"+nIslandId)
-				}
-			 
+				var nbs:Array = getAllNeighbors(cid)
+				unSignList.shift()
 				
-				trace("cpoint id:"+cid)
 				
-				signList.unshift(unSignList.shift())
-				
-			}//end for
-			trace("unSignList length:" + unSignList.length, signList.length);
-			for (i = 0; i < signList.length;i++ ) {
-				trace(data[signList[i]].island);
 			}
+			
+			cid=0
+			while (cid < islandsList.length-1) {
+				
+				if (islandsList[cid].length == 0) {
+					islandsList.splice(i, 1);
+					cid--
+				}else {
+					cid++
+				}
+			}
+			
+			//trace("finally===>" + islandsList.length)
+			var count:int = 0;
+			for (i = 0; i < islandsList.length;i++ ) {
+				//trace("list " + data[islandsList[i][0]].island + ": " + islandsList[i])
+				count += islandsList[i].length
+				
+			}
+			trace("list step:"+step)
+		//	trace("count:"+count)
+		}
+		
+		
+		protected function getAllNeighbors(id:int):Array {
+			if (data[id].block) return null;
+			
+			var parentId:int = id;
+			var hasNeighbor:Boolean = true;
+			var nbs:Array = [id];
+ 
+			
+			var cid:int;
+			var cpoint:MapNode
+			
+			var nList:Array;
+			var nLen:int
+			var k:int
+			var nPoint:MapNode;
+			
+			var access:Boolean
+			
+			var tempIsland:Array = [];
+			var nIslandId:Array=[]//the nIslandId id is neighbor's if it has.
+			//var nIslandId:int=-1//the nIslandId id is neighbor's if it has.
+			
+			var step:int = 6000;
+			//trace("=====================")
+			while (step > 0 && nbs.length > 0) {
+				step--
+				cid = nbs[0]
+				cpoint = data[cid];
+				if (cpoint.block) { nbs.shift(); continue }
+				
+				nList = cpoint.neighbors;
+				nLen = nList.length;
+				for (k = 0; k < nLen; k++ ) {
+					access = true;
+					nPoint = data[nList[k]];
+					 if (cpoint.neighborG[k] > 10) {
+									
+						//if the neighbor point is diagonal,check can access to it.
+						if (nPoint.id > cid) {
+							if (data[nPoint.id - col].block && data[cid + col].block) 
+								access=false
+						
+						}else {
+							if (data[nPoint.id + col].block && data[cid - col].block) 
+								access=false
+						}
+					}
+					
+					if (access) {
+						if(nbs.indexOf(nPoint.id)<0)
+							nbs.push(nPoint.id);
+					}
+				
+				}
+				
+				// if the neighbor point have not in tempIsland list, add it  and remove it from nbs.
+				 if (tempIsland.indexOf(nbs[0]) < 0) {
+					 
+					 if (data[nbs[0]].island >= 0) {
+						 if(nIslandId.indexOf(data[nbs[0]].island)<0){
+							nIslandId.push(data[nbs[0]].island);
+						 }
+						 // trace("****nIslandId:"+nIslandId+"*********")
+					 }
+					tempIsland.push(nbs.shift());
+					//if(nbs[0]==20)
+					//trace(">>>>nbs id:"+nbs[0],nIslandId.length)
+				 }
+				else {
+					//if(nbs[0]==20)
+					//trace("nbs id:"+nbs[0])
+					nbs.shift();
+				}
+			}//end while
+			var tempIslandId:int;
+			if (nIslandId.length==0) {
+				//islands++;
+				islands=islandsList.length
+				islandsList.push(tempIsland);//add a new island
+				
+				for (k = 0; k < tempIsland.length; k++ ) {
+					//if(tempIsland[k]==20) trace("20 island:"+islands)
+					data[tempIsland[k]].island = islands;
+				}
+				
+				//trace("XXX>island id:"+islands+"list: "+tempIsland)
+			}else {
+				//if there is some point share by different island, merge them to one.
+				// tempIslandId = nIslandId;
+				var $aid:int
+				var $pid:int
+				var $defaultAid:int = nIslandId[0]
+				
+				//need move temp point to island
+				for (k = 0; k < tempIsland.length; k++ ) {
+					//if(tempIsland[k]==20) trace("20 island:"+$defaultAid)
+					data[tempIsland[k]].island = $defaultAid;
+					islandsList[$defaultAid].push(tempIsland[k]);
+				}
+				
+				
+				for (var i:int = 0; i < nIslandId.length; i++ ) {
+					$aid = nIslandId[i];
+					//trace("share id:"+nIslandId[i],"defulat id: "+ nIslandId[0])
+					//trace("share point :nIslandId:"+nIslandId[i],"tempIsland:"+tempIsland,"islandsList:"+islandsList.length)
+					for (var j:int = 0; j < islandsList[$aid].length; j++ ) {
+						//trace("j"+j+" >  "+islandsList[nIslandId[i]])
+						$pid = islandsList[$aid][j];
+						data[$pid].island = $defaultAid
+					}
+				}
+				
+				
+				
+				
+				//trace("==>island id:" + islands + "list: " + tempIsland);
+			}
+			
+			
+			//trace("nb step:"+step)
+		//	trace("tempIsland len: "+tempIsland.length +"\nlist =>"+tempIsland)
+			return tempIsland;
 		}
 		
 		public function find(from:Point, to:Point):Array {

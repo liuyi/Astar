@@ -20,12 +20,12 @@
     </define>
     <verbose-stacktraces>true</verbose-stacktraces>
     <source-path append="true">
-      <path-element>D:\Dropbox\lab\flash\Astar\src</path-element>
+      <path-element>D:\Dropbox\lab\flash\Astar\develop\src</path-element>
       <path-element>D:\Program Files\FlashDevelop\Library\AS3\classes</path-element>
     </source-path>
   </compiler>
   <file-specs>
-    <path-element>D:\Dropbox\lab\flash\Astar\src\Main.as</path-element>
+    <path-element>D:\Dropbox\lab\flash\Astar\develop\src\Main.as</path-element>
   </file-specs>
   <default-background-color>#FFFFFF</default-background-color>
   <default-frame-rate>30</default-frame-rate>
