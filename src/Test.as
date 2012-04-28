@@ -11,11 +11,11 @@ package
 		
 		public function Test() 
 		{
-			 var list:Array = [ { a:0 }, { a:2 }, { a:4 } , { a:7 } ];
+			// var list:Array = [ { a:0 }, { a:2 }, { a:4 } , { a:7 } ];
 			
 			
 		 
-			binarySort( { a:4.5 }, list, function(a:Object,b:Object):int {
+		/*	binarySort( { a:4.5 }, list, function(a:Object,b:Object):int {
 					trace(a.a,b.a,a.a > b.a)
 				if (a.a > b.a) return 1
 				else return -1
@@ -24,7 +24,7 @@ package
 			 for (var i:int = 0; i < list.length;i++ ) {
 				  trace(list[i].a);
 		  }
-			
+			*/
 			
 			//trace(list,list.length);
 			/*var list:Array = [0];

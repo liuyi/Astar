@@ -3,6 +3,7 @@ package
 	import flash.display.Sprite;
 	import flash.geom.Point;
 	import flash.text.TextField;
+	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 	
 	/**
@@ -43,10 +44,11 @@ package
 		public var _terrainData:Array;
 		
 		private var islands:int
-		private var islandsList:Array;//store all types island to it. such as: islandsList[0]=[1,2,3,4,5]
+		//private var islandsList:Array;//store all types island to it. such as: islandsList[0]=[1,2,3,4,5]
+		private var islandsList:Dictionary;//store all types island to it. such as: islandsList[0]=[1,2,3,4,5]
 		private var islandColors:Array=[0x00ccba,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee,0x336699,0xf8eaef,0x00ccba,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee,0x336699,0xf8eaef,0x00ccba,0xccee33,0xfeed99,0x9832ee,0xad98ef,0x99aab3,0x89ddee,0x336699,0xf8eaef]
 		
-		
+		private var crash:Boolean
 		
 		
 		public function Map() 
@@ -198,7 +200,7 @@ package
 		public function getIslands():void {
 			islands = 0;
 			var unSignList:Array = [];
-			islandsList = [];
+			islandsList =new Dictionary();
 			var len:int = data.length;
 			for (var i:int = 0; i < len;i++ ) {
 				unSignList[i] = i;
@@ -208,9 +210,11 @@ package
 			var cid:int;
 			var cpoint:MapNode
 			
-			var step:int = 3000;
-			while (step>0 && unSignList.length > 0) {
+			var step:int = 2000;
+			var t:Number=getTimer()
+			while (!crash&&step>0 && unSignList.length > 0) {
 				step--
+				
 				cid = unSignList[0];
 				cpoint = data[cid];
 				
@@ -220,14 +224,16 @@ package
 					continue; 
 				}
 				
-				var nbs:Array = getAllNeighbors(cid)
+				getAllNeighbors(cid)
+				
 				unSignList.shift()
 				
 				
 			}
 			
-			cid=0
-			while (cid < islandsList.length-1) {
+			 
+			
+			/*while (cid < islandsList.length-1) {
 				
 				if (islandsList[cid].length == 0) {
 					islandsList.splice(i, 1);
@@ -240,17 +246,18 @@ package
 			//trace("finally===>" + islandsList.length)
 			var count:int = 0;
 			for (i = 0; i < islandsList.length;i++ ) {
-				//trace("list " + data[islandsList[i][0]].island + ": " + islandsList[i])
+				// trace("list "+i+"  :" + data[islandsList[i][0]].island)
 				count += islandsList[i].length
 				
 			}
-			trace("list step:"+step)
-		//	trace("count:"+count)
+			//trace("list step:"+step,"islandsList len:"+islandsList.length)
+		 	*/
+			trace("step:"+step,"time:"+(getTimer()-t),"count:"+islands+" is crash?"+crash)
 		}
 		
 		
-		protected function getAllNeighbors(id:int):Array {
-			if (data[id].block) return null;
+		protected function getAllNeighbors(id:int):void {
+			if (data[id].block) return ;
 			
 			var parentId:int = id;
 			var hasNeighbor:Boolean = true;
@@ -263,6 +270,7 @@ package
 			var nList:Array;
 			var nLen:int
 			var k:int
+			var i:int
 			var nPoint:MapNode;
 			
 			var access:Boolean
@@ -271,13 +279,26 @@ package
 			var nIslandId:Array=[]//the nIslandId id is neighbor's if it has.
 			//var nIslandId:int=-1//the nIslandId id is neighbor's if it has.
 			
-			var step:int = 6000;
+			var step:int = 50;
+			var tempIslandId:int;
+			
+			var $aid:int
+			var $pid:int
+			var $defaultAid:int
+			var $len:int
+			var $ar:Array
+			var $tempPoint:MapNode
+			
+				
+				
 			//trace("=====================")
-			while (step > 0 && nbs.length > 0) {
+			while (!crash && step>0 &&  nbs.length > 0) {
 				step--
 				cid = nbs[0]
 				cpoint = data[cid];
-				if (cpoint.block) { nbs.shift(); continue }
+				
+				if (cpoint.block ) { nbs.shift(); continue }
+				if (tempIsland.indexOf(cid) >= 0) {  nbs.shift(); continue }
 				
 				nList = cpoint.neighbors;
 				nLen = nList.length;
@@ -298,79 +319,99 @@ package
 					}
 					
 					if (access) {
-						if(nbs.indexOf(nPoint.id)<0)
+						if(nbs.indexOf(nPoint.id)<0 &&  tempIsland.indexOf(cid) < 0)
 							nbs.push(nPoint.id);
 					}
 				
-				}
+				}//end for
 				
+				
+				$tempPoint = data[nbs[0]];
 				// if the neighbor point have not in tempIsland list, add it  and remove it from nbs.
-				 if (tempIsland.indexOf(nbs[0]) < 0) {
+				 if (tempIsland.indexOf($tempPoint.id) < 0) {
 					 
-					 if (data[nbs[0]].island >= 0) {
-						 if(nIslandId.indexOf(data[nbs[0]].island)<0){
-							nIslandId.push(data[nbs[0]].island);
-						 }
-						 // trace("****nIslandId:"+nIslandId+"*********")
+					 //if the neighbor point has own by a island, and have not be added to temIsland.
+					 if ($tempPoint.island >= 0 && nIslandId.indexOf($tempPoint.island) < 0) {
+							//if (islandsList[$tempPoint.island] == null) { step = 0 ;  return; }
+							nIslandId.push($tempPoint.island);
+							
+							// trace("========>nIslandId:" + nIslandId, "  id: " + $tempPoint.id + "  has this island ?" + $tempPoint.island + ":  " + islandsList[$tempPoint.island])
+							  trace("========>nIslandId:" + nIslandId, "  id: " + $tempPoint.id + "  has this island ?" + $tempPoint.island + ":  " + islandsList[$tempPoint.island].length )
+							if(islandsList[$tempPoint.island]==null) crash=true
 					 }
 					tempIsland.push(nbs.shift());
-					//if(nbs[0]==20)
-					//trace(">>>>nbs id:"+nbs[0],nIslandId.length)
 				 }
 				else {
-					//if(nbs[0]==20)
-					//trace("nbs id:"+nbs[0])
 					nbs.shift();
 				}
 			}//end while
-			var tempIslandId:int;
+			
+			//trace("nbs length:"+nbs.length,"step:"+step+"  crash:"+crash);
+			if (crash) return;
 			if (nIslandId.length==0) {
-				//islands++;
-				islands=islandsList.length
-				islandsList.push(tempIsland);//add a new island
+				islands++
+				//trace("XXXXXXXXXcreate a new island:"+islands,islandsList[islands]+"XXXXXXX");
+			
+				islandsList[islands]=tempIsland;//add a new island
 				
 				for (k = 0; k < tempIsland.length; k++ ) {
-					//if(tempIsland[k]==20) trace("20 island:"+islands)
 					data[tempIsland[k]].island = islands;
 				}
+				tempIsland = null;
 				
-				//trace("XXX>island id:"+islands+"list: "+tempIsland)
 			}else {
 				//if there is some point share by different island, merge them to one.
-				// tempIslandId = nIslandId;
-				var $aid:int
-				var $pid:int
-				var $defaultAid:int = nIslandId[0]
 				
+				 k = 0;
+				 $defaultAid = 0 
+				
+				 while (islandsList[$defaultAid] == null) {
+				
+					  $defaultAid = nIslandId[k];
+					  // trace("get $defaultAid:"+$defaultAid);
+				 }
+				// trace("$defaultAid:"+$defaultAid);
+				$len=tempIsland.length
 				//need move temp point to island
-				for (k = 0; k < tempIsland.length; k++ ) {
-					//if(tempIsland[k]==20) trace("20 island:"+$defaultAid)
+				for (k = 0; k < $len; k++ ) {
 					data[tempIsland[k]].island = $defaultAid;
+					//if(islandsList[$defaultAid]==null) trace("*********************"+$defaultAid+"****************")
+					if(islandsList[$defaultAid].indexOf(tempIsland[k])<0)
 					islandsList[$defaultAid].push(tempIsland[k]);
-				}
+				}//end for
 				
+				$len= nIslandId.length
+				for (k = 0; k< $len; k++ ) {
+					$aid = nIslandId[k];
 				
-				for (var i:int = 0; i < nIslandId.length; i++ ) {
-					$aid = nIslandId[i];
-					//trace("share id:"+nIslandId[i],"defulat id: "+ nIslandId[0])
-					//trace("share point :nIslandId:"+nIslandId[i],"tempIsland:"+tempIsland,"islandsList:"+islandsList.length)
-					for (var j:int = 0; j < islandsList[$aid].length; j++ ) {
-						//trace("j"+j+" >  "+islandsList[nIslandId[i]])
-						$pid = islandsList[$aid][j];
-						data[$pid].island = $defaultAid
+					if ($aid != $defaultAid) {
+						
+						//$ar sometimes get null 
+						$ar = islandsList[$aid] as Array;
+						if ($ar == null) { trace("******no this island? " + $tempPoint.island); crash = true; return }
+						//if($ar!=null){
+						//trace("arra "+$aid+":"+ $ar.length)
+							for (i = 0; i < $ar.length; i++ ) {
+							//	trace("old ar island id:"+data[$ar[i]].island,"$aid:"+$aid )
+								data[$ar[i]].island = $defaultAid;
+								if(islandsList[$defaultAid].indexOf($ar[i])<0)
+								islandsList[$defaultAid].push($ar[i]);
+							//	trace("new ar island id:"+data[$ar[i]].island )
+							}
+							
+							delete islandsList[$aid];
+							//trace("$aid:"+$aid, islandsList[$aid] )
+						//}
 					}
+				 
+					
 				}
 				
-				
-				
-				
-				//trace("==>island id:" + islands + "list: " + tempIsland);
+	
 			}
 			
-			
 			//trace("nb step:"+step)
-		//	trace("tempIsland len: "+tempIsland.length +"\nlist =>"+tempIsland)
-			return tempIsland;
+			//return tempIsland;
 		}
 		
 		public function find(from:Point, to:Point):Array {
